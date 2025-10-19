@@ -14,16 +14,31 @@ class Ball:
         self.velocity_x = random.choice([-5, 5])
         self.velocity_y = random.choice([-3, 3])
 
-    def move(self):
+    def move_and_collide(self, player, ai):
+        # Move first
         self.x += self.velocity_x
         self.y += self.velocity_y
 
+        # Bounce off top and bottom walls
         if self.y <= 0 or self.y + self.height >= self.screen_height:
             self.velocity_y *= -1
+            if hasattr(self, "game_engine"):  # reference to play sound
+                self.game_engine.sound_wall.play()
+        ball_rect = self.rect()
 
-    def check_collision(self, player, ai):
-        if self.rect().colliderect(player.rect()) or self.rect().colliderect(ai.rect()):
+        # Check collision with player paddle
+        if ball_rect.colliderect(player.rect()):
+            self.x = player.x + player.width  # prevent sticking inside
             self.velocity_x *= -1
+            if hasattr(self, "game_engine"):
+                self.game_engine.sound_paddle.play()
+
+        # Check collision with AI paddle
+        elif ball_rect.colliderect(ai.rect()):
+            self.x = ai.x - self.width  # prevent sticking inside
+            self.velocity_x *= -1
+            if hasattr(self, "game_engine"):
+                self.game_engine.sound_paddle.play()
 
     def reset(self):
         self.x = self.original_x
